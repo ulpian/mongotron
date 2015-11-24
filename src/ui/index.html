@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="./vendor/jquery.splitter/css/jquery.splitter.css" />
   <link rel="stylesheet" href="./vendor/toastr/toastr.css" />
   <link rel="stylesheet" href="./vendor/codemirror/lib/codemirror.css" />
+  <link rel="stylesheet" href="./vendor/codemirror/theme/lesser-dark.css" />
   <link rel="stylesheet" href="./vendor/codemirror/addon/hint/show-hint.css" />
   <link rel="stylesheet" href="./vendor/ng-prettyjson/dist/ng-prettyjson.min.css" />
   <!-- JAVASCRIPT -->
@@ -43,6 +44,7 @@
   <script src="./vendor/codemirror/lib/codemirror.js"></script>
   <script src="./vendor/codemirror/mode/javascript/javascript.js"></script>
   <script src="./vendor/codemirror/addon/hint/show-hint.js"></script>
+  <script src="./vendorCustom/codemirror-formatting.js"></script>
   <script src="./vendorCustom/mongotron-codemirror-hint.js"></script>
   <!-- <script src="./vendor/codemirror/addon/hint/javascript-hint.js"></script> -->
   <!-- src -->
@@ -56,6 +58,11 @@
   <script src="./services/alertService.js"></script>
   <script src="./services/connectionCache.js"></script>
   <script src="./services/keypressService.js"></script>
+  <script src="./services/keypressHandlers/connectionManager-newConnection.js"></script>
+  <script src="./services/keypressHandlers/tabManager-runQuery.js"></script>
+  <script src="./services/keypressHandlers/tabManager-autoformat.js"></script>
+  <script src="./services/keypressHandlers/tabManager-nextTab.js"></script>
+  <script src="./services/keypressHandlers/tabManager-previousTab.js"></script>
   <script src="./services/menuService.js"></script>
   <script src="./services/modalService.js"></script>
   <script src="./services/dialogService.js"></script>
@@ -64,6 +71,9 @@
   <script src="./components/addDatabase/addDatabaseCtrl.js"></script>
   <script src="./components/addCollection/addCollectionCtrl.js"></script>
   <script src="./components/settings/settingsCtrl.js"></script>
+  <script src="./components/settings/keybindings/keybindingsCtrl.js"></script>
+  <script src="./components/settings/preferences/preferencesCtrl.js"></script>
+  <script src="./components/settings/themes/themesCtrl.js"></script>
   <script src="./components/logs/logsCtrl.js"></script>
   <script src="./directives/right-click.js"></script>
   <script src="./directives/codemirror/codemirror.js"></script>
@@ -71,22 +81,26 @@
   <script src="./directives/collection-query/collectionQueryCtrl.js"></script>
   <script src="./directives/sidebar/sidebar.js"></script>
   <script src="./directives/sidebar/sidebarCtrl.js"></script>
+  <script src="./directives/sidenav/sidenav.js"></script>
+  <script src="./directives/sidenav/sidenavCtrl.js"></script>
   <script src="./directives/tab-view/tab-view.js"></script>
   <script src="./directives/tab-view/tabViewCtrl.js"></script>
+  <script src="./directives/keybinding-context.js"></script>
 </head>
 
 <body class="theme-{{ themes.current }}">
   <!-- need for ngAnimate -->
   <base href="/" />
   <!-- APP -->
-  <div class="app">
+  <div class="app" keybinding-context="mongotron-workspace">
     <div class="splitter" splitter position="20%" limit="240">
       <div class="sidebar-wrapper">
+        <sidenav></sidenav>
         <sidebar></sidebar>
       </div>
       <div class="content-wrapper">
         <div class="content">
-          <tab-view></tab-view>
+          <tab-view keybinding-context="mongotron-tab-view"></tab-view>
         </div>
       </div>
     </div>
