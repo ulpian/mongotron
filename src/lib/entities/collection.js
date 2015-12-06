@@ -6,7 +6,7 @@ const Promise = require('bluebird');
 const mongoUtils = require('src/lib/utils/mongoUtils');
 const errors = require('lib/errors');
 
-const PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 50;
 
 /**
  * @class Collection
@@ -63,18 +63,23 @@ class Collection {
     return new Promise(function(resolve, reject) {
       if (!query) return reject(new errors.InvalidArugmentError('query is required'));
 
-      //TODO: validate the query??
+      let stream = options.stream;
+      delete options.stream;
 
-      var dbQuery = _this._dbCollection.find(query, options);
+      let dbQuery = _this._dbCollection.find(query, options);
 
       if (options.skip) dbQuery.skip(Number(options.skip));
 
-      dbQuery.limit(options.limit && options.limit <= PAGE_SIZE ? options.limit : PAGE_SIZE);
+      dbQuery.limit(options.limit ? Number(options.limit) : DEFAULT_PAGE_SIZE);
 
-      dbQuery.toArray(function(err, docs) {
-        if (err) return reject(err);
-        return resolve(docs);
-      });
+      if (stream === true) {
+        return resolve(dbQuery.stream());
+      } else {
+        dbQuery.toArray(function(err, docs) {
+          if (err) return reject(err);
+          return resolve(docs);
+        });
+      }
     });
   }
 
@@ -106,7 +111,6 @@ class Collection {
 
     return new Promise(function(resolve, reject) {
       if (!objectId) return reject(new errors.InvalidArugmentError('id is required'));
-      if (!mongoUtils.isObjectId(objectId)) return reject(new errors.InvalidArugmentError('objectId must be an instance of ObjectId'));
 
       _this._dbCollection.deleteOne({
         _id: objectId

@@ -1,16 +1,18 @@
 # <a href="http://mongotron.io/" target="_blank">Mongotron</a>
 
+[![Build Status](https://travis-ci.org/officert/mongotron.svg?branch=master)](https://travis-ci.org/officert/mongotron)
+
 A Mongo DB GUI built using Electron, and Angular Js.
 
-[![Build Status](https://travis-ci.org/officert/mongotron.svg?branch=master)](https://travis-ci.org/officert/mongotron)
+---
 
 ![screenshot](https://github.com/officert/mongotron/blob/master/docs/images/screenshot.png)
 
-Download a VERY initial release <a href="https://s3.amazonaws.com/mongotron/releases/mongotron-0.1.0.zip" target="_blank">here</a>.
+## Table of Contents
 
-## Development
+* [Quick start](#quick-start)
 
-### Getting Started
+### Quick Start
 
 1. Clone the repo
 2. Install dependencies
@@ -20,11 +22,7 @@ npm install
 ```shell
 bower install
 ```
-3. Create symlinks
-```shell
-make postinstall
-```
-4. Start the app
+3. Start the app
 ```shell
 gulp serve
 ```
