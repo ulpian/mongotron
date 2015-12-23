@@ -2,13 +2,12 @@
 
 angular.module('app').controller('queryCtrl', [
   '$scope',
-  '$timeout',
   '$rootScope',
-  'alertService',
+  'notificationService',
   'modalService',
-  function($scope, $timeout, $rootScope, alertService, modalService) {
+  function($scope, $rootScope, notificationService, modalService) {
     const queryModule = require('lib/modules/query');
-    const mongoUtils = require('src/lib/utils/mongoUtils');
+    const keyValueUtils = require('src/lib/utils/keyValueUtils');
 
     if (!$scope.database) throw new Error('database is required for database query directive');
     if (!$scope.database.collections || !$scope.database.collections.length) throw new Error('database must have collections for database query directive');
@@ -17,12 +16,15 @@ angular.module('app').controller('queryCtrl', [
     $scope.queryTime = null;
     $scope.editorHandle = {};
     $scope.codeEditorOptions = {};
+    $scope.codeEditorCustomData = {
+      collectionNames: _.pluck($scope.database.collections, 'name')
+    };
 
+    $scope.currentQuery = null;
     $scope.results = [];
     $scope.keyValueResults = [];
 
     $scope.deleteResult = _deleteResult;
-    $scope.getPropertyTypeIcon = _getPropertyTypeIcons;
 
     let defaultCollection = $scope.defaultCollection ? _.findWhere($scope.database.collections, {
       name: $scope.defaultCollection
@@ -30,7 +32,7 @@ angular.module('app').controller('queryCtrl', [
 
     defaultCollection = defaultCollection || $scope.database.collections[0];
 
-    var defaultQuery = 'db.' + defaultCollection.name.toLowerCase() + '.find({\n  \n})';
+    let defaultQuery = 'db.' + defaultCollection.name.toLowerCase() + '.find({\n  \n})';
 
     $scope.changeTabName = function(name) {
       if (!name || !$scope.databaseTab) return;
@@ -40,9 +42,7 @@ angular.module('app').controller('queryCtrl', [
     $scope.changeTabName(defaultQuery);
 
     $scope.form = {
-      query: defaultQuery,
-      skip: 0,
-      limit: 50
+      query: defaultQuery
     };
 
     $scope.runQuery = function() {
@@ -50,10 +50,11 @@ angular.module('app').controller('queryCtrl', [
     };
 
     $scope.VIEWS = {
-      RAW: 'LIST',
-      KEYVALUE: 'KEYVALUE'
+      TEXT: 'TEXT',
+      KEYVALUE: 'KEYVALUE',
+      RAW: 'RAW'
     };
-    $scope.currentView = $scope.VIEWS.LIST;
+    $scope.currentView = $scope.VIEWS.KEYVALUE;
 
     _runQuery(defaultQuery);
 
@@ -78,14 +79,8 @@ angular.module('app').controller('queryCtrl', [
       }
     });
 
-    $scope.$watch('results', function(val) {
-      if (val && _.isArray(val)) {
-        $scope.keyValueResults = _convertResultsToKeyValueResults(val);
-      }
-    });
-
     $scope.exportResults = function() {
-      modalService.openQueryResultsExport($scope.currentCollection, $scope.exportQuery);
+      modalService.openQueryResultsExport($scope.currentCollection, $scope.currentQuery);
     };
 
     function _runQuery(rawQuery) {
@@ -95,46 +90,59 @@ angular.module('app').controller('queryCtrl', [
       $scope.changeTabName(rawQuery);
 
       if (!queryModule.isValidQuery(rawQuery)) {
-        $scope.error = 'Sorry, that is not a valid query';
+        $scope.error = 'Sorry, ' + rawQuery + ' is not a valid query';
         $scope.loading = false;
         return;
       }
 
-      var collection = _getCollectionFromRawQuery(rawQuery);
+      let collectionName = queryModule.parseCollectionName(rawQuery);
+
+      let collection = _getCollectionByNameFromRawQuery(collectionName);
 
       if (!collection) {
-        $scope.error = 'Sorry, that is not a valid collection name';
+        $scope.error = 'Sorry, ' + collectionName + ' is not a valid collection name';
         $scope.loading = false;
         return;
       }
 
       $scope.currentCollection = collection;
 
-      let query = null;
+      let query;
 
       queryModule.createQuery(rawQuery)
         .then((_query) => {
           query = _query;
 
-          $scope.exportQuery = query.query; //used by the query-results-export directive
-
           return collection.execQuery(query);
         })
         .then((result) => {
-          $timeout(() => {
+          $scope.$apply(() => {
+            $scope.currentQuery = query;
             $scope.loading = false;
             $scope.queryTime = result.time;
             $scope.results = result.result;
 
-            if (query.mongoMethod !== 'find') {
-              alertService.success(query.mongoMethod + ' was successful');
+            if ($scope.results && _.isArray($scope.results)) {
+              $scope.keyValueResults = keyValueUtils.convert($scope.results);
+            }
+
+            if ($scope.currentQuery.mongoMethod === 'count') {
+              $scope.currentView = $scope.VIEWS.RAW;
+            } else if ($scope.currentView === $scope.VIEWS.RAW) {
+              $scope.currentView = $scope.VIEWS.KEYVALUE;
+            }
+
+            if ($scope.currentQuery.mongoMethod !== 'find' &&
+              $scope.currentQuery.mongoMethod !== 'aggregate' &&
+              $scope.currentQuery.mongoMethod !== 'count') {
+              notificationService.success($scope.currentQuery.mongoMethod + ' was successful');
 
               _runQuery('db.' + $scope.currentCollection.name + '.find()');
             }
           });
         })
         .catch((error) => {
-          $timeout(() => {
+          $scope.$apply(() => {
             $scope.error = error && error.message ? error.message : error;
             $scope.loading = false;
           });
@@ -144,91 +152,28 @@ angular.module('app').controller('queryCtrl', [
     function _deleteResult(result) {
       if (!result) return;
 
-      modalService.confirm({
-        message: 'Are you sure you want to delete this record?',
-        confirmButtonMessage: 'Yes',
-        cancelButtonMessage: 'No'
-      }).result.then(function() {
-        $scope.currentCollection.deleteById(result._id)
-          .then(() => {
-            $timeout(() => {
-              alertService.success('Delete successful');
+      modalService.openDeleteResult(result, $scope.currentCollection)
+        .then(() => {
+          $scope.$apply(() => {
+            notificationService.success('Delete successful');
 
-              _runQuery('db.' + $scope.currentCollection.name + '.find()');
-            });
-          })
-          .catch((error) => {
-            $timeout(() => {
-              $scope.error = error && error.message ? error.message : error;
-              $scope.loading = false;
-            });
+            _runQuery('db.' + $scope.currentCollection.name + '.find()');
           });
-      });
+        })
+        .catch((error) => {
+          $scope.$apply(() => {
+            $scope.error = error && error.message ? error.message : error;
+            $scope.loading = false;
+          });
+        });
     }
 
-    function _getCollectionFromRawQuery(rawQuery) {
-      var collectionName = queryModule.parseCollectionName(rawQuery);
-
+    function _getCollectionByNameFromRawQuery(collectionName) {
       if (!collectionName) return null;
 
       return _.find($scope.database.collections, function(collection) {
         return collection.name && collection.name.toLowerCase && collection.name.toLowerCase() === collectionName.toLowerCase() ? true : false;
       });
-    }
-
-    function _getPropertyTypeIcons(propertyType) {
-      var icon;
-
-      switch (propertyType) {
-        case 'number':
-          icon = '';
-          break;
-        case 'string':
-          icon = 'fa-quote-left';
-          break;
-        case 'boolean':
-          icon = 'fa-calendar';
-          break;
-        case 'date':
-          icon = 'fa-calendar';
-          break;
-        case 'array':
-          icon = 'fa-calendar';
-          break;
-        case 'objectId':
-          icon = 'fa-cog';
-          break;
-      }
-
-      return icon;
-    }
-
-    function _convertResultsToKeyValueResults(results) {
-      return results.map(function(result) {
-        var props = [];
-        props._id = result._id;
-
-        for (var key in result) {
-          //TODO: if it's a nested object then recurse and generate key/value for all of it's props
-          props.push({
-            _id: result[key] ? result[key]._id : result[key],
-            key: key,
-            value: result[key],
-            type: _getPropertyType(result[key])
-          });
-        }
-
-        return props;
-      });
-    }
-
-    function _getPropertyType(property) {
-      if (_.isNumber(property)) return 'number';
-      if (_.isString(property)) return 'string';
-      if (_.isArray(property)) return 'array';
-      if (_.isDate(property)) return 'date';
-      if (_.isBoolean(property)) return 'boolean';
-      if (mongoUtils.isObjectId(property)) return 'objectId';
     }
   }
 ]);

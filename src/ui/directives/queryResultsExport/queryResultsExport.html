@@ -1,11 +1,8 @@
 <div class="query-results-export">
   <div class="export-nav clearfix">
     <div class="border-line"></div>
-    <div class="right-btns">
-      <div class="export-btn-list btn-group">
-        <input class="number-input form-control pull-left" type="number" ng-model="limit" placeholder="Limit" auto-grow-input>
-      </div>
-      <div class="btn-group">
+    <div class="btns">
+      <div class="btn-group first">
         <button class="btn btn-default btn-sm" ng-click="importSettings()">
           <i class="fa fa-external-link-square rotate-90"></i> Import Settings
         </button>
@@ -21,6 +18,9 @@
           <i class="fa fa-plus"></i> Add Column
         </button>
       </div>
+      <div class="export-btn-list btn-group">
+        <input class="number-input form-control pull-left" type="number" ng-model="limit" placeholder="Limit" auto-grow-input>
+      </div>
     </div>
   </div>
   <div class="export-progress progress" ng-show="loading">
@@ -28,26 +28,47 @@
     </div>
   </div>
   <div class="key-value-pairs clearfix" ng-hide="loading">
-    <div class="key-value-pair" ng-repeat="keyValuePair in keyValuePairs">
-      <div class="menu">
-        <ul>
-          <li>
-            <button class="btn btn-default" ng-click="removeColumn(keyValuePair)">
-              <i class="fa fa-plus rotate-45"></i>
-            </button>
-          </li>
-        </ul>
-      </div>
-      <div class="form-group clearfix">
-        <label class="control-label col-sm-2">Header</label>
-        <div class="col-sm-10">
-          <input class="form-control" type="text" ng-model="keyValuePair.key">
+    <div class="alert alert-info italic center" ng-hide="keyValuePairs.length">
+      You don't have any columns added to your export yet...
+    </div>
+    <div class="key-value-pair-wrapper" ui-sortable="sortableOptions">
+      <div class="key-value-pair" ng-repeat="keyValuePair in keyValuePairs" ng-show="keyValuePairs.length">
+        <span class="drag-handle">
+          <span class="dots clearfix">
+            <span class="left-dots">
+              <i class="fa fa-circle"></i>
+              <i class="fa fa-circle"></i>
+              <i class="fa fa-circle"></i>
+              <i class="fa fa-circle"></i>
+            </span>
+            <span class="right-dots">
+              <i class="fa fa-circle"></i>
+              <i class="fa fa-circle"></i>
+              <i class="fa fa-circle"></i>
+              <i class="fa fa-circle"></i>
+            </span>
+          </span>
+        </span>
+        <div class="menu">
+          <ul>
+            <li>
+              <button class="btn btn-default" ng-click="removeColumn(keyValuePair)">
+                <i class="fa fa-plus rotate-45"></i>
+              </button>
+            </li>
+          </ul>
         </div>
-      </div>
-      <div class="form-group clearfix">
-        <label class="control-label col-sm-2">Property Name</label>
-        <div class="col-sm-10">
-          <input class="form-control" type="text" ng-model="keyValuePair.value">
+        <div class="form-group clearfix">
+          <label class="left-col control-label col-sm-2">Header</label>
+          <div class="right-col col-sm-10">
+            <input class="form-control" type="text" ng-model="keyValuePair.key">
+          </div>
+        </div>
+        <div class="form-group clearfix">
+          <label class="left-col control-label col-sm-2">Property Name</label>
+          <div class="right-col col-sm-10">
+            <input class="form-control" type="text" ng-model="keyValuePair.value">
+          </div>
         </div>
       </div>
     </div>

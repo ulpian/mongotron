@@ -10,7 +10,6 @@
   <!-- src -->
   <link rel="stylesheet" href="./css/main.css" />
   <!-- vendor -->
-  <link rel="stylesheet" href="./vendor/toastr/toastr.css" />
   <link rel="stylesheet" href="./vendor/codemirror/lib/codemirror.css" />
   <link rel="stylesheet" href="./vendor/codemirror/addon/hint/show-hint.css" />
   <!-- JAVASCRIPT -->
@@ -18,8 +17,6 @@
     //load jquery using require because it thinks it's loading for node and
     //doesn't register the global $ or jquery
     window.$ = window.jQuery = require('./vendor/jquery/dist/jquery.min.js');
-    //same with toastr
-    window.toastr = window.toastr = require('./vendor/toastr/toastr.min.js');
   </script>
   <!-- vendor -->
   <script src="./vendor/jquery-ui/jquery-ui.min.js"></script>
@@ -39,21 +36,23 @@
   <!-- src -->
   <script src="./app.js"></script>
   <script src="./filters/trim.js"></script>
-  <script src="./services/alertService.js"></script>
   <script src="./services/connectionCache.js"></script>
-  <script src="./services/hinterService.js"></script>
   <script src="./services/keypressService.js"></script>
+  <script src="./services/notificationService.js"></script>
   <script src="./services/keypressHandlers/connectionManager-newConnection.js"></script>
   <script src="./services/keypressHandlers/tabManager-runQuery.js"></script>
   <script src="./services/keypressHandlers/tabManager-autoformat.js"></script>
   <script src="./services/keypressHandlers/tabManager-nextTab.js"></script>
   <script src="./services/keypressHandlers/tabManager-previousTab.js"></script>
+  <script src="./services/keypressHandlers/tabManager-newTab.js"></script>
   <script src="./services/menuService.js"></script>
   <script src="./services/modalService.js"></script>
   <script src="./services/dialogService.js"></script>
   <script src="./services/tabCache.js"></script>
   <script src="./services/themeService.js"></script>
   <script src="./services/navUtils.js"></script>
+  <script src="./services/recursionHelper.js"></script>
+  <script src="./services/utilsService.js"></script>
   <script src="./controllers/appCtrl.js"></script>
   <script src="./components/connect/connectCtrl.js"></script>
   <script src="./components/connect/listConnections/listConnectionsCtrl.js"></script>
@@ -86,6 +85,14 @@
   <script src="./directives/keybindingContext.js"></script>
   <script src="./directives/hasConnections.js"></script>
   <script src="./directives/themeClass.js"></script>
+  <script src="./directives/keyValueResults/keyValueResults.js"></script>
+  <script src="./directives/keyValueResults/keyValueResultsCtrl.js"></script>
+  <script src="./directives/keyValueResult/keyValueResult.js"></script>
+  <script src="./directives/keyValueResult/keyValueResultCtrl.js"></script>
+  <script src="./directives/notifications/notifications.js"></script>
+  <script src="./directives/notifications/notificationsCtrl.js"></script>
+  <script src="./directives/notifications/notification.js"></script>
+  <script src="./directives/notifications/notificationCtrl.js"></script>
 </head>
 
 <body theme-class>
@@ -103,6 +110,7 @@
       </div>
     </div>
   </div>
+  <notifications></notifications>
 </body>
 
 </html>

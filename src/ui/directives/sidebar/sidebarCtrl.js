@@ -1,12 +1,12 @@
 angular.module('app').controller('sidebarCtrl', [
   '$scope',
   '$timeout',
-  'alertService',
+  'notificationService',
   'tabCache',
   'connectionCache',
   'menuService',
   'modalService',
-  function($scope, $timeout, alertService, tabCache, connectionCache, menuService, modalService) {
+  function($scope, $timeout, notificationService, tabCache, connectionCache, menuService, modalService) {
     const logger = require('lib/modules/logger');
 
     $scope.activeConnections = connectionCache.list();
@@ -38,9 +38,7 @@ angular.module('app').controller('sidebarCtrl', [
             tabCache.removeByConnectionId(connection.id);
           });
         }
-      }], {
-        connection: connection
-      });
+      }]);
     };
 
     $scope.openConnection = function openConnection(connection) {
@@ -50,7 +48,10 @@ angular.module('app').controller('sidebarCtrl', [
         connection.connect(function(err) {
           $timeout(function() {
             if (err) {
-              alertService.error(err);
+              notificationService.error({
+                title: 'Error opening connection',
+                message: err
+              });
               connection.isOpen = false;
             } else {
               connection.isOpen = true;
@@ -84,7 +85,7 @@ angular.module('app').controller('sidebarCtrl', [
             }).result.then(function() {
               database.drop()
                 .then(function() {
-                  alertService.success('Database dropped');
+                  notificationService.success('Database dropped');
 
                   tabCache.removeByDatabase(database);
 
@@ -95,14 +96,15 @@ angular.module('app').controller('sidebarCtrl', [
                 })
                 .catch(function(err) {
                   logger.error(err);
-                  alertService.error(err);
+                  notificationService.error({
+                    title: 'Error dropping database',
+                    message: err
+                  });
                 });
             });
           });
         }
-      }], {
-        connection: connection
-      });
+      }]);
     };
 
     $scope.openDatabaseCollectionFolderContextMenu = function openDatabaseCollectionFolderContextMenu(database, connection) {
@@ -125,7 +127,7 @@ angular.module('app').controller('sidebarCtrl', [
         label: 'New Query',
         click: function() {
           $timeout(function() {
-            $scope.activateItem(collection, 'collection');
+            $scope.activateItem(collection, 'query');
           });
         }
       }, {
@@ -139,7 +141,7 @@ angular.module('app').controller('sidebarCtrl', [
             }).result.then(function() {
               collection.drop()
                 .then(function() {
-                  alertService.success('Collection dropped');
+                  notificationService.success('Collection dropped');
 
                   tabCache.removeByCollection(collection);
 
@@ -150,7 +152,10 @@ angular.module('app').controller('sidebarCtrl', [
                 })
                 .catch(function(err) {
                   logger.error(err);
-                  alertService.error(err);
+                  notificationService.error({
+                    title: 'Error dropping collection',
+                    message: err
+                  });
                 });
             });
           });
@@ -174,7 +179,10 @@ angular.module('app').controller('sidebarCtrl', [
             database.opening = false;
 
             if (err) {
-              return alertService.error(err);
+              return notificationService.error({
+                title: 'Error opening database',
+                message: err
+              });
             }
 
             database.isOpen = true;
@@ -198,7 +206,10 @@ angular.module('app').controller('sidebarCtrl', [
             database.loadingCollections = false;
 
             if (err) {
-              return alertService.error(err);
+              return notificationService.error({
+                title: 'Error opening collections',
+                message: err
+              });
             }
 
             database.collections = collections.map(function(collection) {

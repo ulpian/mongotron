@@ -5,11 +5,17 @@ angular.module('app').controller('queryResultsExportCtrl', [
   'dialogService',
   '$log',
   '$timeout',
-  'alertService',
-  function($scope, dialogService, $log, $timeout, alertService) {
+  'notificationService',
+  function($scope, dialogService, $log, $timeout, notificationService) {
+    const Query = require('lib/modules/query/query');
+
     if (!$scope.collection) throw new Error('queryResultsExportCtrl - collection is required on scope');
     if (!$scope.query) throw new Error('queryResultsExportCtrl - query is required on scope');
-    $scope.limit = $scope.limit || 50;
+    if (!($scope.query instanceof Query)) throw new Error('queryResultsExport directive - $scope.query must be an instance of Query');
+
+    if ($scope.query.mongoMethod !== 'find' && $scope.query.mongoMethod !== 'aggregate') throw new Error('queryResultsExport directive - query type can only be find or aggregate query');
+
+    $scope.limit = null;
 
     const fs = require('fs');
     const csv = require('csv');
@@ -17,6 +23,24 @@ angular.module('app').controller('queryResultsExportCtrl', [
     const CsvStream = require('lib/utils/csvStream');
 
     $scope.keyValuePairs = [];
+
+    $scope.sortableOptions = {
+      //http://api.jqueryui.com/sortable
+      placeholder: 'sortable-placeholder',
+      delay: 0,
+      appendTo: '.key-value-pair-wrapper',
+      revert: 50,
+      helper: function(e, item) {
+        $timeout(function() {
+          //force the element to show, race condition :(
+          item.attr('style', 'display: block !important');
+        });
+        return item.clone();
+      },
+      // helper: 'clone',
+      opacity: 1,
+      tolerance: 'intersect'
+    };
 
     $scope.handle = $scope.handle || {};
     $scope.handle.export = _export;
@@ -63,12 +87,14 @@ angular.module('app').controller('queryResultsExportCtrl', [
           $timeout(() => {
             $scope.loading = true;
 
-            $scope.collection.find($scope.query, {
-                stream: true,
-                limit: $scope.limit
-              })
-              .then((stream) => {
-                stream
+            $scope.query.queryOptions = {
+              stream: true,
+              limit: $scope.limit || 50
+            };
+
+            $scope.collection.execQuery($scope.query)
+              .then((results) => {
+                results.result
                   .pipe(new CsvStream(nameProps))
                   .on('error', handleError)
                   .pipe(fs.createWriteStream(path))
@@ -76,7 +102,7 @@ angular.module('app').controller('queryResultsExportCtrl', [
                   .on('finish', () => {
                     $timeout(() => {
                       $scope.loading = false;
-                      alertService.success('Finished exporting');
+                      notificationService.success('Finished exporting');
                     });
                   });
               })
@@ -113,7 +139,7 @@ angular.module('app').controller('queryResultsExportCtrl', [
 
                 if (err) return handleError(err);
 
-                alertService.success('Settings saved to : ' + path);
+                notificationService.success('Settings saved to : ' + path);
               });
             });
           });
@@ -152,7 +178,7 @@ angular.module('app').controller('queryResultsExportCtrl', [
               $timeout(() => {
                 $scope.loading = false;
 
-                alertService.success('Settings imported');
+                notificationService.success('Settings imported');
               });
             });
         })

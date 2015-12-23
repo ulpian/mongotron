@@ -1,0 +1,54 @@
+<div ng-right-click="openDocumentContextMenu(result)">
+  <ul class="menu" ng-if="topLevel">
+    <li>
+      <button class="btn btn-default" ng-click="deleteResult(result.original)">
+        <i class="fa fa-plus rotate-45"></i>
+      </button>
+    </li>
+  </ul>
+  <div class="clearfix" ng-click="result.isOpen = !result.isOpen">
+    <div class="result-header clearfix" ng-hide="result.type === 'object' || result.type === 'array'">
+      <div class="result-cell first-cell col-sm-3">
+        <i class="" ng-class="{ 'icon-chevron-right' : !result.isOpen, 'icon-chevron-down' : result.isOpen }"></i>
+        <span>({{ result.__index + 1 }}) {{ ::result.original._id }}</span>
+      </div>
+      <div class="result-cell col-sm-6">
+        { {{ ::result.keyValues.length }} fields }
+      </div>
+      <div class="result-cell col-sm-3">
+        {{ result.type || 'object' }}
+      </div>
+    </div>
+    <div class="result-sub-header clearfix" ng-show="result.type === 'object' || result.type === 'array'">
+      <div class="result-cell col-sm-3" ng-style="{ 'padding-left' : (((level - 1) * 15) + 'px') }">
+        <i class="" ng-class="{ 'icon-chevron-right' : !result.isOpen, 'icon-chevron-down' : result.isOpen }"></i>
+        <i class="fa {{ ::result.icon }}"></i>
+        <span>{{ ::result.key }}</span>
+      </div>
+      <div class="result-cell col-sm-6">
+        {{ ::result.display }}
+      </div>
+      <div class="result-cell col-sm-3">
+        {{ ::result.type }}
+      </div>
+    </div>
+  </div>
+  <div class="result-body clearfix level-{{ level }}" ng-if="result.isOpen" ng-class="{ 'open' : result.isOpen }">
+    <div class="result-row clearfix" ng-repeat="keyvalue in ::result.keyValues">
+      <div class="clearfix" ng-hide="keyvalue.keyValues">
+        <div class="result-cell first-cell col-sm-3" ng-style="{ 'padding-left' : ((level * 15) + 'px') }">
+          <i class="fa {{ ::keyvalue.icon }}"></i> {{ ::keyvalue.key }}
+        </div>
+        <div class="result-cell col-sm-6">
+          {{ ::keyvalue.display }}
+        </div>
+        <div class="result-cell col-sm-3">
+          {{ ::keyvalue.type }}
+        </div>
+      </div>
+      <div ng-show="keyvalue.keyValues">
+        <key-value-result result="keyvalue" delete-result="deleteResult" top-level="false"></key-value-result>
+      </div>
+    </div>
+  </div>
+</div>

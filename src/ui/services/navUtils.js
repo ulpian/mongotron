@@ -1,12 +1,25 @@
+'use strict';
+
 angular.module('app').factory('navUtils', [
   'modalService',
   'tabCache',
-  function(modalService, tabCache) {
+  'utilsService',
+  function(modalService, tabCache, utilsService) {
+    const Promise = require('bluebird');
 
     function NavUtils() {}
 
     NavUtils.prototype.showConnections = function(page) {
-      return modalService.openConnectionManager(page).result;
+      utilsService.setTitle('Select a connection');
+
+      return new Promise((resolve, reject) => {
+        modalService.openConnectionManager(page).result
+          .then(resolve)
+          .catch(reject)
+          .finally(() => {
+            utilsService.setTitle('Mongotron');
+          });
+      });
     };
 
     NavUtils.prototype.showSettings = function() {
@@ -36,6 +49,21 @@ angular.module('app').factory('navUtils', [
         });
       } else {
         tabCache.activateByName(aboutTabName);
+      }
+    };
+
+    NavUtils.prototype.showLogs = function() {
+      var logsTabName = 'Logs';
+
+      if (!tabCache.existsByName(logsTabName)) {
+        tabCache.add({
+          type: tabCache.TYPES.PAGE,
+          iconClassName: 'fa fa-info-circle',
+          name: logsTabName,
+          src: __dirname + '/components/logs/logs.html'
+        });
+      } else {
+        tabCache.activateByName(logsTabName);
       }
     };
 

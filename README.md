@@ -1,6 +1,7 @@
 # <a href="http://mongotron.io/" target="_blank">Mongotron</a>
 
 [![Build Status](https://travis-ci.org/officert/mongotron.svg?branch=master)](https://travis-ci.org/officert/mongotron)
+[![Join the chat at https://gitter.im/officert/mongotron](https://badges.gitter.im/officert/mongotron.svg)](https://gitter.im/officert/mongotron?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 A Mongo DB GUI built using Electron, and Angular Js.
 
@@ -14,17 +15,31 @@ A Mongo DB GUI built using Electron, and Angular Js.
 
 ### Quick Start
 
-1. Clone the repo
-2. Install dependencies
+* Clone the repo
+* Install dependencies
+
 ```shell
 npm install
 ```
 ```shell
 bower install
 ```
-3. Start the app
+
+* Install gulp globally
+
+```shell
+npm install -g gulp
+```
+
+* Start the app
+
 ```shell
 gulp serve
+```
+
+### Tests
+```shell
+gulp test
 ```
 
 ###Troubleshooting
@@ -37,3 +52,7 @@ this will create a release directory and package the app into an executable
 ```shell
 gulp release
 ```
+
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/officert/mongotron/trend.png)](https://bitdeli.com/free "Bitdeli Badge")

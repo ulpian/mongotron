@@ -119,6 +119,25 @@ class Collection {
   }
 
   /**
+   * @method count
+   * @param {Object} query - mongo query
+   * @param {Object} [options] - mongo query options
+   */
+  count(query, options) {
+    var _this = this;
+
+    return new Promise(function(resolve, reject) {
+      if (options && options.skip) options.skip = Number(options.skip);
+      if (options && options.limit) options.limit = Number(options.limit);
+
+      _this._dbCollection.count(query, options, function(error, result) {
+        if (error) return reject(error);
+        return resolve(result);
+      });
+    });
+  }
+
+  /**
    * @method deleteMany
    * @param {Object} query - mongo query
    * @param {Object} [options] - mongo query options
@@ -184,14 +203,23 @@ class Collection {
     return new Promise(function(resolve, reject) {
       if (!query) return reject(new errors.InvalidArugmentError('query is required'));
 
-      options.limit = 50;
+      let stream = options.stream;
+      delete options.stream;
 
-      //TODO: validate the query??
+      let dbQuery = _this._dbCollection.aggregate(query, options);
 
-      _this._dbCollection.aggregate(query, options).toArray(function(err, result) {
-        if (err) return reject(err);
-        return resolve(result);
-      });
+      if (options.skip) dbQuery.skip(Number(options.skip));
+
+      dbQuery.limit(options.limit ? Number(options.limit) : DEFAULT_PAGE_SIZE);
+
+      if (stream === true) {
+        return resolve(dbQuery.stream());
+      } else {
+        dbQuery.toArray(function(err, docs) {
+          if (err) return reject(err);
+          return resolve(docs);
+        });
+      }
     });
   }
 
