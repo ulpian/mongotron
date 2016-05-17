@@ -3,12 +3,13 @@
 angular.module('app').controller('addConnectionCtrl', [
   '$scope',
   '$timeout',
-  '$log',
   'notificationService',
   'connectionCache',
-  function($scope, $timeout, $log, notificationService, connectionCache) {
+  function($scope, $timeout, notificationService, connectionCache) {
     const connectionModule = require('lib/modules/connection');
     const Connection = require('lib/entities/connection');
+    const mongoUtils = require('src/lib/utils/mongoUtils');
+    const logger = require('lib/modules/logger');
 
     $scope.currentSubPage = 'server';
 
@@ -27,6 +28,8 @@ angular.module('app').controller('addConnectionCtrl', [
       buttonErrorClass: 'btn-danger'
     };
 
+    $scope.isLocalHost = mongoUtils.isLocalHost;
+
     $scope.addConnectionForm = $scope.selectedConnection ? _.extend({
       databaseName: ($scope.selectedConnection.databases && $scope.selectedConnection.databases.length) ? $scope.selectedConnection.databases[0].name : null
     }, $scope.selectedConnection) : {
@@ -42,8 +45,15 @@ angular.module('app').controller('addConnectionCtrl', [
     }
 
     $scope.$watch('addConnectionForm.host', function(val) {
-      if (val === 'localhost') {
+      if (mongoUtils.isLocalHost(val)) {
         $scope.addConnectionForm.databaseName = null;
+      }
+    });
+
+    $scope.$watch('addConnectionForm.enableReplicaSet', function(val) {
+      if (val === true) {
+        $scope.addConnectionForm.host = null;
+        $scope.addConnectionForm.port = null;
       }
     });
 
@@ -87,7 +97,7 @@ angular.module('app').controller('addConnectionCtrl', [
               title: 'Error adding connection',
               message: err
             });
-            $log.log(err);
+            logger.error(err);
           });
         });
     };
@@ -109,7 +119,7 @@ angular.module('app').controller('addConnectionCtrl', [
               title: 'Error updating connection',
               message: err
             });
-            $log.log(err);
+            logger.error(err);
           });
         });
     };

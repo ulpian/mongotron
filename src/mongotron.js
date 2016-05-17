@@ -6,18 +6,10 @@ const connection = require('lib/modules/connection');
 const keybindings = require('lib/modules/keybindings');
 const themes = require('lib/modules/themes');
 
-/**
- * @constructor Mongotron
- */
+/** @class */
 class Mongotron {
-  /**
-   * @constructor Mongotron
-   */
   constructor() {}
 
-  /**
-   * @method init
-   */
   init() {
     createAppConfigDir();
     createDbConfigFile();
@@ -47,7 +39,4 @@ function createThemesFile() {
   fileUtils.createFileSync(appConfig.themesPath, themes.defaultThemes);
 }
 
-/**
- * @exports Mongotron
- */
 module.exports = new Mongotron();

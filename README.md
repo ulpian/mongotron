@@ -8,7 +8,7 @@ A Mongo DB GUI built using Electron, and Angular Js.
 
 ---
 
-![screenshot](https://github.com/officert/mongotron/blob/master/docs/images/screenshot.png)
+![screenshot](http://mongotron.io/src/images/screenshot.png)
 
 ## Table of Contents
 
@@ -23,34 +23,24 @@ A Mongo DB GUI built using Electron, and Angular Js.
 npm install
 ```
 
-* Install gulp globally
-
-```shell
-npm install -g gulp
-```
-
 * Start the app
 
 ```shell
-gulp serve
+npm start
 ```
 
 ### Tests
 ```shell
-gulp test
+make test
 ```
 
 ###Troubleshooting
 
 ####electron command not found
-If you get this error you don't have Elecron installed. Go [here] (https://github.com/atom/electron/blob/master/docs/tutorial/quick-start.md) to install it.
+If you get this error you don't have Electron installed. Go [here] (https://github.com/atom/electron/blob/master/docs/tutorial/quick-start.md) to install it.
 
 ### Releasing
 this will create a release directory and package the app into an executable
 ```shell
 gulp release
 ```
-
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/officert/mongotron/trend.png)](https://bitdeli.com/free "Bitdeli Badge")

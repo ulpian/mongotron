@@ -11,21 +11,18 @@ const _ = require('underscore');
 const logger = require('lib/modules/logger');
 const Database = require('lib/entities/database');
 const errors = require('lib/errors');
+const mongoUtils = require('src/lib/utils/mongoUtils');
 
-/**
- * @class Connection
- */
+/** @class */
 class Connection {
   /**
-   * @constructor Connection
-   *
    * @param {Object} options
    * @param {String} options.name
    * @param {String} [options.host]
    * @param {String} [options.port]
    * @param {Object} [options.replicaSet]
    * @param {String} [options.replicaSet.name]
-   * @param {Array<Object>} [options.replicaSet.sets]
+   * @param {Array<Object>} [options.replicaSet.servers]
    */
   constructor(options) {
     options = options || {};
@@ -38,7 +35,7 @@ class Connection {
     _this.replicaSet = options.replicaSet;
     _this.databases = [];
 
-    if (options.databaseName && options.host !== 'localhost') {
+    if (options.databaseName && !mongoUtils.isLocalHost(options.host)) {
       let newDb = {
         id: uuid.v4(),
         name: options.databaseName,
@@ -65,27 +62,25 @@ class Connection {
   }
 
   /**
-   * @method connect
+   * Connect to the connection
    */
   connect() {
-    var _this = this;
-
     return new Promise((resolve, reject) => {
-      logger.log('Connecting to ' + _this.name + ' server @ ' + _this.connectionString + '...');
+      logger.info(`Connecting to ${this.name} server @ ${this.connectionString}...`);
 
       let client = new MongoClient();
 
-      if (!_this.connectionString) {
-        return reject(new Error('connecting does have a connection string'));
+      if (!this.connectionString) {
+        return reject(new Error('connection does have a connection string'));
       }
 
-      client.connect(_this.connectionString, (err, database) => {
+      client.connect(this.connectionString, (err, database) => {
         if (err) return reject(new errors.ConnectionError(err.message));
 
-        logger.log('Connected to ' + _this.name + ' server @ ' + _this.connectionString);
+        logger.info(`Connected to ${this.name} server @ ${this.connectionString}`);
 
-        if (_this.host === 'localhost') {
-          _getDbsForLocalhostConnection(_this, () => {
+        if (mongoUtils.isLocalHost(this.host)) {
+          _getDbsForLocalhostConnection(this, () => {
             return resolve(null);
           });
         } else {
@@ -96,44 +91,75 @@ class Connection {
   }
 
   /**
-   * @method addDatabase
+   * Add a new database to the connection
    * @param {Object} options
-   * @param {String} config.name
+   * @param {String} options.name
    */
   addDatabase(options) {
     options = options || {};
 
-    var _this = this;
-
-    var existingDatabase = _.findWhere(_this.databases, {
+    let existingDatabase = _.findWhere(this.databases, {
       name: options.name
     });
 
     if (existingDatabase) return;
 
-    var database = new Database({
+    let database = new Database({
       id: options.id,
       name: options.name,
       host: options.host,
       port: options.port,
       auth: options.auth,
-      connection: _this
+      connection: this
     });
 
-    _this.databases.push(database);
+    this.databases.push(database);
 
     return database;
+  }
+
+  /**
+   * Create a new database
+   * @param {Object} options
+   * @param {String} options.name
+   * @return Promise
+   */
+  createDatabase(options) {
+    options = options || {};
+
+    return new Promise((resolve, reject) => {
+      if (!options) return reject(new Error('options is required'));
+      if (!options.name) return reject(new Error('options.name is required'));
+
+      let client = new MongoClient();
+
+      client.connect(this.connectionString, (err, database) => {
+        if (err) return reject(err);
+
+        database.db(options.name);
+
+        let newDatabase = this.addDatabase({
+          name: options.name,
+          host: this.host,
+          port: this.port,
+          auth: this.auth
+        });
+
+        return resolve(newDatabase);
+      });
+    });
   }
 }
 
 /**
  * @function _getDbsForLocalhostConnection
  * @param {Function} next - callback function
+ * @private
  */
 function _getDbsForLocalhostConnection(connection, next) {
   if (!connection) return next(new Error('connection is required'));
   if (!next) return next(new Error('next is required'));
-  if (connection.host !== 'localhost') return next(new Error('cannot get local dbs for non localhost connection'));
+  if (!mongoUtils.isLocalHost(connection.host)) return next(new Error('cannot get local dbs for non localhost connection'));
 
   var localDb = new MongoDb('local', new MongoServer(connection.host, connection.port));
 
@@ -162,6 +188,11 @@ function _getDbsForLocalhostConnection(connection, next) {
   });
 }
 
+/**
+ * @function _getConnectionString
+ * @param {Connection} connection
+ * @private
+ */
 function _getConnectionString(connection) {
   if (!connection) return null;
 
@@ -169,38 +200,35 @@ function _getConnectionString(connection) {
   let auth = '';
 
   if (db && db.auth && db.auth.username && db.auth.password) {
-    auth += (db.auth.username + ':' + db.auth.password + '@');
+    auth += (`${db.auth.username}:${db.auth.password}@`);
   }
 
   let connectionString = 'mongodb://';
   let hasReplSet = false;
 
-  if (connection && connection.replicaSet && connection.replicaSet.name && (connection.replicaSet.sets && connection.replicaSet.sets.length)) {
+  if (connection && connection.replicaSet && connection.replicaSet.name && (connection.replicaSet.servers && connection.replicaSet.servers.length)) {
     hasReplSet = true;
 
     connectionString += auth;
 
-    for (let i = 0; i < connection.replicaSet.sets.length; i++) {
-      let set = connection.replicaSet.sets[i];
+    for (let i = 0; i < connection.replicaSet.servers.length; i++) {
+      let set = connection.replicaSet.servers[i];
 
-      connectionString += set.host + ':' + set.port;
+      connectionString += `${set.host}:${set.port}`;
 
-      if (i < (connection.replicaSet.sets.length - 1)) {
+      if (i < (connection.replicaSet.servers.length - 1)) {
         connectionString += ',';
       }
     }
   } else {
-    connectionString += auth + connection.host + ':' + connection.port;
+    connectionString += auth + `${connection.host}:${connection.port}`;
   }
 
-  if (db) connectionString += ('/' + db.name);
+  if (db) connectionString += `/${db.name}`;
 
-  if (hasReplSet) connectionString += '?replicaSet=' + connection.replicaSet.name;
+  if (hasReplSet) connectionString += `?replicaSet=${connection.replicaSet.name}`;
 
   return connectionString;
 }
 
-/**
- * @exports Connection
- */
 module.exports = Connection;

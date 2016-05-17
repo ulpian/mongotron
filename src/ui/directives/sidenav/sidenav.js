@@ -1,5 +1,7 @@
-angular.module('app').directive('sidenav', [
-  function() {
+'use strict';
+
+angular.module('app').directive('mongotronSidenav', [
+  () => {
     return {
       restrict: 'E',
       replace: true,

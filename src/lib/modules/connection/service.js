@@ -6,12 +6,12 @@ const logger = require('lib/modules/logger');
 const errors = require('lib/errors');
 const connectionValidator = require('./validator');
 const connectionRepository = require('./repository');
+const mongoUtils = require('src/lib/utils/mongoUtils');
 
 const DEFAULT_CONNECTIONS = require('./defaults');
 
-/**
- * @module Connection
- */
+/** @module Connection */
+/** @class */
 class ConnectionService {
   constructor() {}
 
@@ -20,7 +20,8 @@ class ConnectionService {
   }
 
   /**
-   * @param {string} id - id of the connection to find
+   * Find a connection by id
+   * @param {string} id - Id of the connection to find
    */
   findById(id) {
     return connectionRepository.findById(id);
@@ -33,9 +34,9 @@ class ConnectionService {
    * @param {string} options.host - Connection host
    * @param {string} options.port - Connection port
    * @param {string} [options.databaseName] - Database name
-   * @param {object} [options.replicaSet]
-   * @param {string} options.replicaSet.name
-   * @param {array<object>} options.replicaSet.sets
+   * @param {object} [options.replicaSet] - Replica set config
+   * @param {string} options.replicaSet.name - Replica set name
+   * @param {array<object>} options.replicaSet.servers - Replica set servers
    * @param {object} [options.auth]
    */
   create(options) {
@@ -84,9 +85,9 @@ class ConnectionService {
    * @param {string} [updates.host] - Connection host
    * @param {string} [updates.port ]- Connection port
    * @param {string} [updates.databaseName] - Database name
-   * @param {object} [updates.replicaSet]
-   * @param {string} [updates.replicaSet.name]
-   * @param {array<object>} [updates.replicaSet.sets]
+   * @param {object} [updates.replicaSet] - Replica set config
+   * @param {string} [updates.replicaSet.name] - Replica set name
+   * @param {array<object>} [updates.replicaSet.servers] - Replica set servers
    * @param {object} [updates.auth]
    */
   update(id, updates) {
@@ -134,7 +135,7 @@ function _applyConnectionUpdatesPreValidation(connection, updates) {
     if ('host' in updates) {
       connection.host = updates.host;
       delete connection.replicaSet;
-      if (updates.host === 'localhost') {
+      if (mongoUtils.isLocalHost(updates.host)) {
         delete connection.databases;
       }
     }
@@ -155,13 +156,13 @@ function _applyConnectionUpdatesPreValidation(connection, updates) {
         delete connection.host;
         delete connection.port;
         if ('name' in updates.replicaSet) connection.replicaSet.name = updates.replicaSet.name;
-        if ('sets' in updates.replicaSet) connection.replicaSet.sets = updates.replicaSet.sets;
+        if ('servers' in updates.replicaSet) connection.replicaSet.servers = updates.replicaSet.servers;
       } else {
         connection.replicaSet = updates.replicaSet;
       }
     }
 
-    if (connection.host !== 'localhost') {
+    if (!mongoUtils.isLocalHost(connection.host)) {
       let db = connection.databases && connection.databases.length ? connection.databases[0] : null;
 
       if (!db) logger.warn('connection service - _applyConnectionUpdates() - connection has no database');
@@ -174,9 +175,6 @@ function _applyConnectionUpdatesPreValidation(connection, updates) {
         }
       }
     }
-
-    // console.log('pre updates', updates);
-    // console.log('pre updated connection', connection);
 
     return resolve(connection);
   });
@@ -209,7 +207,7 @@ function _applyConnectionUpdatesPostValidation(connection, updates) {
       if ('host' in updates) db.host = updates.host;
       if ('port' in updates) db.port = updates.port;
     } else {
-      if ('host' in updates && updates.host !== 'localhost') {
+      if ('host' in updates && !mongoUtils.isLocalHost(updates.host)) {
         connection.addDatabase({
           host: updates.host,
           port: updates.port
@@ -217,14 +215,8 @@ function _applyConnectionUpdatesPostValidation(connection, updates) {
       }
     }
 
-    // console.log('post updates', updates);
-    // console.log('post updated connection', connection);
-
     return resolve(connection);
   });
 }
 
-/**
- * @exports ConnectionService
- */
 module.exports = new ConnectionService();

@@ -32,6 +32,8 @@
   <script src="./vendor/codemirror/lib/codemirror.js"></script>
   <script src="./vendor/codemirror/mode/javascript/javascript.js"></script>
   <script src="./vendor/codemirror/addon/hint/show-hint.js"></script>
+  <script src="./vendor/marked/lib/marked.js"></script>
+  <script src="./vendor/angular-vs-repeat/src/angular-vs-repeat.js"></script>
   <script src="./vendorCustom/codemirror-formatting.js"></script>
   <script src="./vendorCustom/ng-bs-animated-button.js"></script>
   <!-- src -->
@@ -56,6 +58,7 @@
   <script src="./services/utilsService.js"></script>
   <script src="./controllers/appCtrl.js"></script>
   <script src="./components/connect/connectCtrl.js"></script>
+  <script src="./components/editDocument/editDocumentCtrl.js"></script>
   <script src="./components/connect/listConnections/listConnectionsCtrl.js"></script>
   <script src="./components/connect/addConnection/addConnectionCtrl.js"></script>
   <script src="./components/connect/removeConnection/removeConnectionCtrl.js"></script>
@@ -67,10 +70,11 @@
   <script src="./components/settings/keybindings/keybindingsCtrl.js"></script>
   <script src="./components/settings/preferences/preferencesCtrl.js"></script>
   <script src="./components/settings/themes/themesCtrl.js"></script>
+  <script src="./components/settings/updates/updatesCtrl.js"></script>
   <script src="./components/logs/logsCtrl.js"></script>
   <script src="./directives/loading.js"></script>
   <script src="./directives/imageSrc.js"></script>
-  <script src="./directives/slideDown.js"></script>
+  <script src="./directives/giveFocusAndSelect.js"></script>
   <script src="./directives/rightClick.js"></script>
   <script src="./directives/codemirror/codemirror.js"></script>
   <script src="./directives/query/query.js"></script>
@@ -81,15 +85,18 @@
   <script src="./directives/sidebar/sidebarCtrl.js"></script>
   <script src="./directives/sidenav/sidenav.js"></script>
   <script src="./directives/sidenav/sidenavCtrl.js"></script>
+  <script src="./directives/footer/footer.js"></script>
+  <script src="./directives/footer/footerCtrl.js"></script>
   <script src="./directives/tabView/tabView.js"></script>
   <script src="./directives/tabView/tabViewCtrl.js"></script>
   <script src="./directives/keybindingContext.js"></script>
   <script src="./directives/hasConnections.js"></script>
   <script src="./directives/themeClass.js"></script>
-  <script src="./directives/keyValueResults/keyValueResults.js"></script>
-  <script src="./directives/keyValueResults/keyValueResultsCtrl.js"></script>
+  <script src="./directives/markdown.js"></script>
   <script src="./directives/keyValueResult/keyValueResult.js"></script>
   <script src="./directives/keyValueResult/keyValueResultCtrl.js"></script>
+  <script src="./directives/inlineEditor/inlineEditor.js"></script>
+  <script src="./directives/inlineEditor/inlineEditorCtrl.js"></script>
   <script src="./directives/notifications/notifications.js"></script>
   <script src="./directives/notifications/notificationsCtrl.js"></script>
   <script src="./directives/notifications/notification.js"></script>
@@ -101,16 +108,16 @@
 <body theme-class>
   <!-- need for ngAnimate -->
   <base href="/" />
-  <!-- APP -->
   <div class="app" ng-controller="appCtrl" keybinding-context="mongotron-workspace" has-connections>
     <div class="sidebar-wrapper">
-      <sidenav></sidenav>
-      <sidebar></sidebar>
+      <mongotron-sidenav></mongotron-sidenav>
+      <mongotron-sidebar></mongotron-sidebar>
     </div>
     <div class="content-wrapper">
       <div class="content">
         <tab-view keybinding-context="mongotron-tab-view"></tab-view>
       </div>
+      <mongotron-footer></mongotron-footer>
     </div>
   </div>
   <notifications></notifications>
